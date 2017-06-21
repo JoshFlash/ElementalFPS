@@ -5,6 +5,9 @@ using UnityStandardAssets.CrossPlatformInput;
 
 namespace ElementalFPS.Characters.Player
 {
+	//this is derived from the standard assets first person controller
+	//changes to be made to simplify and improve functionality
+
 	//head bob will have to be included in a later version of ElementalFPS
 	//FOV Kick will have to be implemented later as well if desired
 

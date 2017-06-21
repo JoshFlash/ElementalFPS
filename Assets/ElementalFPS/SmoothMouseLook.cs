@@ -5,6 +5,7 @@ using UnityStandardAssets.CrossPlatformInput;
 
 [AddComponentMenu("Camera-Control/Smooth Mouse Look")]
 //currently this is still exactly the same as the standard assets mouse look
+//changes to be made as needed
 [Serializable]
 public class SmoothMouseLook 
 {
