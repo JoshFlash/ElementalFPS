@@ -14,14 +14,15 @@ public class BurstGun : Firearm
 
 	private void Start()
 	{
-		//ensures that we start ready to fire
+		//ensure that we start ready to fire
 		timeSinceLastFire = (1/primaryFireRate) + (1/secondaryFireRate);
 		audioSource = GetComponent<AudioSource>();
 	}
 
 	public override void FirePrimary() 
     {
-		if (ReadyToFire()) {
+		if (ReadyToFire())
+		{
 			InstantiateBullet();
 			audioSource.Play();
 			timeSinceLastFire = 0f;
@@ -30,7 +31,8 @@ public class BurstGun : Firearm
 
 	public override void FireSecondary()
 	{
-		if (ReadyToFire()) {
+		if (ReadyToFire())
+		{
 			burstsLeft = burstFireRounds;
 			InvokeRepeating("Burst", 0.001f, delayBetweenBurstRounds);
 			timeSinceLastFire = 0f;
@@ -65,7 +67,7 @@ public class BurstGun : Firearm
 	private void Update()
 	{
 		timeSinceLastFire += Time.deltaTime;
-		if (Input.GetMouseButtonDown(0))
+		if (Input.GetButtonDown("Fire1"))
 		{
 			Fire();
 		}
