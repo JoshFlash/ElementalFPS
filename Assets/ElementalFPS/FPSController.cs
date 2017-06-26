@@ -13,7 +13,7 @@ namespace ElementalFPS.Characters.Player
 
 		/// <summary>
 		/// Thigngs to fix:
-		/// Can control movement in midair - should be changed to pitch or no control depending on desired resut
+		/// Can control movement in midair - should be changed to pitch or no control depending on desired result
 		/// can trigger next jump whie jumping which causes immediate jump upon landing - super annoying
 		/// also the jump might be more intuitive like slower up faster down
 		/// </summary>
@@ -34,9 +34,14 @@ namespace ElementalFPS.Characters.Player
 		private bool isJumping;
 		private bool wasPreviouslyGrounded;
 
-		private Vector2 m_Input;					//rename this once you figure out what it means
-		private Vector3 m_MoveDir = Vector3.zero;	//rename this too
+		//the code relating to inputVector must be checked in order to ensure proper walk speeds
+		//when it accepts gamepad inputs for any direction make sure normalises appropriately and adjusts speeds (only when walking)
+		//that is, if a joystick is partially pressed down at 45 degree fwd it should adjust the speed to a slower 'walk'
+		//all running should be done at the same speed regardless of joystick pressure (a 'triggered' run as is intuitive)
+		//must review GetAxis when interneted - will examine later
+		private Vector2 inputVector;
 
+		private Vector3 moveDirection = Vector3.zero;
 		private CharacterController characterController;
 		private CollisionFlags collisionFlags;
 		private AudioSource audioSource;
@@ -57,9 +62,6 @@ namespace ElementalFPS.Characters.Player
 		{
 			RotateView();
 			HandleJumping();
-
-			// the jump state needs to read here to make sure it is not missed
-
 		}
 
 		private void RotateView()
@@ -69,29 +71,33 @@ namespace ElementalFPS.Characters.Player
 
 		private void HandleJumping()
 		{
-			//THIS (default) JUMP CODE IS GARBAGE - FIX IT
-			if (!pressedJump)
+			//corrected in-air jump triggering by adding '&& !isJumping' to the following line (conditional part)
+			if (!pressedJump && !isJumping)
 			{
 				pressedJump = CrossPlatformInputManager.GetButtonDown("Jump");
 			}
 			if (!wasPreviouslyGrounded && characterController.isGrounded)
 			{
-				m_MoveDir.y = 0f;
+				moveDirection.y = 0f;
 				isJumping = false;
 			}
 			if (!characterController.isGrounded && !isJumping && wasPreviouslyGrounded)
 			{
-				m_MoveDir.y = 0f;
+				moveDirection.y = 0f;
 			}
 			wasPreviouslyGrounded = characterController.isGrounded;
 		}
 
+		//refactor the fixedupdate code to better represent what is actually happeneing
 		private void FixedUpdate()
 		{
 			float speed;
 			GetInput(out speed);
-			// always move along the camera forward as it is the direction that it being aimed at
-			Vector3 desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
+
+			// desiredMove will have to be adjust as GetInput is rewritten to incorporate gamepad controllers
+			//for now it looks the same
+			Vector3 desiredMove;
+			desiredMove = transform.forward * inputVector.y + transform.right * inputVector.x;
 
 			// get a normal for the surface that is being touched to move along it
 			RaycastHit hitInfo;
@@ -99,26 +105,26 @@ namespace ElementalFPS.Characters.Player
 							   characterController.height / 2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
 			desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
-			m_MoveDir.x = desiredMove.x * speed;
-			m_MoveDir.z = desiredMove.z * speed;
+			moveDirection.x = desiredMove.x * speed;
+			moveDirection.z = desiredMove.z * speed;
 
 
 			if (characterController.isGrounded)
 			{
-				m_MoveDir.y = -stickToGroundForce;
+				moveDirection.y = -stickToGroundForce;
 
 				if (pressedJump)
 				{
-					m_MoveDir.y = jumpSpeed;
-					pressedJump = false;
+					moveDirection.y = jumpSpeed;
 					isJumping = true;
+					pressedJump = false;
 				}
 			}
 			else
 			{
-				m_MoveDir += Physics.gravity * gravityMultiplier * Time.fixedDeltaTime;
+				moveDirection += Physics.gravity * gravityMultiplier * Time.fixedDeltaTime;
 			}
-			collisionFlags = characterController.Move(m_MoveDir * Time.fixedDeltaTime);
+			collisionFlags = characterController.Move(moveDirection * Time.fixedDeltaTime);
 
 			//ProgressStepCycle(speed);
 			UpdateCameraPosition(speed);
@@ -131,27 +137,31 @@ namespace ElementalFPS.Characters.Player
 			//code for camera position due to head-bob goes here
 		}
 
+
+		// this will have to be hugely rewritten to include gamepad controllers
 		private void GetInput(out float speed)
 		{
 			// Read input
 			float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
 			float vertical = CrossPlatformInputManager.GetAxis("Vertical");
 
-			bool waswalking = isWalking;
+			bool wasWalking = isWalking;
 
 #if !MOBILE_INPUT
-			// Keeps track of whether character is walkig or running -  should be modified to include input from GamePads as well
-			isWalking = !Input.GetKey(KeyCode.LeftShift);
+			// Keeps track of whether character is walking or running
+			//should be modified to include input from GamePads as well (not just LeftShift)
+			isWalking = isJumping ? wasWalking : !Input.GetKey(KeyCode.LeftShift);
 #endif
 			// set the desired speed to be walking or running
+			inputVector = new Vector2(horizontal, vertical);
 			speed = isWalking ? walkSpeed : runSpeed;
-			m_Input = new Vector2(horizontal, vertical);
 
 			// normalize input if it exceeds 1 in combined length:
-			if (m_Input.sqrMagnitude > 1)
+			if (inputVector.sqrMagnitude > 1)
 			{
-				m_Input.Normalize();
+				inputVector.Normalize();
 			}
+
 		}
 
 		private void OnControllerColliderHit(ControllerColliderHit hit)
