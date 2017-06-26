@@ -15,7 +15,7 @@ namespace ElementalFPS.Combat.Core
 		public Camera playerCamera;                             //the camera associated with the player using the fireArm
 
 		[SerializeField]	protected float maxRange = 500f;                        //maximum range the firearm can accurately aim (meters) when firing from gun
-		[SerializeField]	protected float minRange = 5f;                          //minimum range the firearm can aim accurately when not zoomed
+		[SerializeField]	protected float minRange = 4f;                          //minimum range the firearm can aim accurately when not zoomed
 		[SerializeField]	protected float reloadTime = 0.5f;                      //the reload time (duh)
 		[SerializeField]	protected float primaryFireRate, secondaryFireRate;		//respective shots per second in each  fire mode
 		[SerializeField]	protected float muzzleVelocity;						    //speed of bullet as it leaves gun
