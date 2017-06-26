@@ -12,13 +12,13 @@ namespace ElementalFPS.Combat.Core
 		/// 
 		/// The bullet will cast a ray every update that will check for 'collisions'
 		/// This raycast will determine whether there was anything in front of the bullet last frame which it will hit 
-		/// and will be calculated based upon the velocity of the bullet, its length, and last frame time (Time.deltaTime).
+		/// and will be calculated based upon the velocity of the bullet, its length, and last frame time (Time.fixedDeltaTime).
 		/// The bullet will then move forward and check the same area now behind it to check for one-sided mesh collision.
 		/// 
 		/// </summary> 
 
 
-		[HideInInspector] public float damage;
+		[HideInInspector] public float damage;		//on-hit damage as determined by gun
 		[HideInInspector] public Vector3 velocity;	// velocity of the bullet where direction is in world space
 
 		public float mass;                          //mass of the bullet in kg
@@ -26,7 +26,7 @@ namespace ElementalFPS.Combat.Core
 		//public List<OnHitEffect> onHitEffects;	//to be used for things like poisons, slows, bullet explosions, players catching fire, etc
 
 		[SerializeField] private bool useGravity = true;      //determines whether the bullet will fall due to gravity
-		[SerializeField] private float lifetime = 5f;
+		[SerializeField] private float lifetime = 2f;
 
 		private float timeAlive;
 		private float tipRayLength, tailRayLength;			 //the distance to raycast in front and behind the tip of the bullet
@@ -46,13 +46,14 @@ namespace ElementalFPS.Combat.Core
 			timeAlive = 0;
 		}
 
-		private void Update()
+		// Should bullet raycasting be done with update or with fixedupdate? - I'm saying fixed! (for now)
+		private void FixedUpdate()
 		{
 			UpdateBulletPhysicsFwd();
 			UpdateBulletPosition();
 			UpdateBulletPhysicsBack();
 
-			timeAlive += Time.deltaTime;
+			timeAlive += Time.fixedDeltaTime;
 			if (timeAlive > lifetime) gameObject.SetActive(false);
 
 			Debug.DrawRay(transform.position, transform.forward * tipRayLength, Color.blue);
@@ -62,15 +63,17 @@ namespace ElementalFPS.Combat.Core
 
 		private void UpdateBulletPosition()
 		{
-			transform.position += velocity * Time.deltaTime;
-			if (useGravity) velocity += gravityForce * Time.deltaTime;
+			transform.position += velocity * Time.fixedDeltaTime;
+			if (useGravity) velocity += gravityForce * Time.fixedDeltaTime;
 		}
 
 		private void UpdateBulletPhysicsFwd()
 		{
-			tipRayLength = ( length / 2 ) + ( speed * Time.deltaTime );
-			if (Physics.Raycast(transform.position, transform.forward, out hit, tipRayLength)) {
-				if (hit.collider) {
+			tipRayLength = ( length / 2 ) + ( speed * Time.fixedDeltaTime );
+			if (Physics.Raycast(transform.position, transform.forward, out hit, tipRayLength))
+			{
+				if (hit.collider)
+				{
 					hasCollided = true;
 					Debug.Log("Bullet will hit a collider in front.");
 					HandleBulletCollision(hit);
@@ -80,9 +83,11 @@ namespace ElementalFPS.Combat.Core
 
 		private void UpdateBulletPhysicsBack()
 		{
-			tailRayLength = ( length / 2 ) + ( speed * Time.deltaTime );
-			if (Physics.Raycast(transform.position, transform.forward * ( -1 ), out hit, tailRayLength)) {
-				if (hit.collider && !hasCollided) {
+			tailRayLength = ( length / 2 ) + ( speed * Time.fixedDeltaTime );
+			if (Physics.Raycast(transform.position, transform.forward * ( -1 ), out hit, tailRayLength))
+			{
+				if (hit.collider && !hasCollided)
+				{
 					hasCollided = true;
 					Debug.Log("Bullet hit a collider behind.");
 					HandleBulletCollision(hit);
@@ -92,7 +97,8 @@ namespace ElementalFPS.Combat.Core
 
 		void HandleBulletCollision(RaycastHit hit)
 		{
-			if (hit.rigidbody) {
+			if (hit.rigidbody)
+			{
 				hit.rigidbody.AddForceAtPosition(transform.TransformDirection(this.velocity) * mass, hit.point);
 				Debug.Log("Hit a rigid body");
 			}
