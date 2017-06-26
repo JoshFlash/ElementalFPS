@@ -7,7 +7,7 @@ using UnityStandardAssets.CrossPlatformInput;
 //currently this is still exactly the same as the standard assets mouse look
 //changes to be made as needed
 [Serializable]
-public class SmoothMouseLook 
+public class SmoothMouseLook
 {
 	public float XSensitivity = 2f;
 	public float YSensitivity = 2f;
@@ -39,14 +39,16 @@ public class SmoothMouseLook
 		m_CameraTargetRot *= Quaternion.Euler(-xRot, 0f, 0f);
 
 		if (clampVerticalRotation)
+		{
 			m_CameraTargetRot = ClampRotationAroundXAxis(m_CameraTargetRot);
-
-		if (smooth) {
-			character.localRotation = Quaternion.Slerp(character.localRotation, m_CharacterTargetRot,
-				smoothTime * Time.deltaTime);
-			camera.localRotation = Quaternion.Slerp(camera.localRotation, m_CameraTargetRot,
-				smoothTime * Time.deltaTime);
-		} else {
+		}
+		if (smooth)
+		{
+			character.localRotation = Quaternion.Slerp(character.localRotation, m_CharacterTargetRot, smoothTime * Time.deltaTime);
+			camera.localRotation = Quaternion.Slerp(camera.localRotation, m_CameraTargetRot, smoothTime * Time.deltaTime);
+		}
+		else
+		{
 			character.localRotation = m_CharacterTargetRot;
 			camera.localRotation = m_CameraTargetRot;
 		}
@@ -57,8 +59,9 @@ public class SmoothMouseLook
 	public void SetCursorLock(bool value)
 	{
 		lockCursor = value;
-		if (!lockCursor) {//we force unlock the cursor 
-						  //				if the user disable the cursor locking helper
+		if (!lockCursor) //we force unlock the cursor 
+		{
+		 //	if the user disable the cursor locking helper
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.visible = true;
 		}
@@ -73,16 +76,22 @@ public class SmoothMouseLook
 
 	private void InternalLockUpdate()
 	{
-		if (Input.GetKeyUp(KeyCode.Escape)) {
+		if (Input.GetKeyUp(KeyCode.Escape))
+		{
 			m_cursorIsLocked = false;
-		} else if (Input.GetMouseButtonUp(0)) {
+		}
+		else if (Input.GetMouseButtonUp(0))
+		{
 			m_cursorIsLocked = true;
 		}
 
-		if (m_cursorIsLocked) {
+		if (m_cursorIsLocked)
+		{
 			Cursor.lockState = CursorLockMode.Locked;
 			Cursor.visible = false;
-		} else if (!m_cursorIsLocked) {
+		}
+		else if (!m_cursorIsLocked)
+		{
 			Cursor.lockState = CursorLockMode.None;
 			Cursor.visible = true;
 		}
